@@ -79,10 +79,10 @@ export default function TaskList() {
                   </Stack>
                 </TableCell>
                 <TableCell>{t.status}</TableCell>
-                <TableCell>{t.assignee?.username || '-'}</TableCell>
+                <TableCell>{t.assigneeUsername || t.assignee?.username || '-'}</TableCell>
                 <TableCell>{t.deadline ? new Date(t.deadline).toLocaleString() : '-'}</TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Edit">
+                  <Tooltip title="Edit" disablePortal>
                     <IconButton color="primary" size="small" component={Link} to={`/tasks/${t.id}/edit`}>
                       <EditIcon fontSize="small" />
                     </IconButton>

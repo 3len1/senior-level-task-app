@@ -1,6 +1,7 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.model.Project;
+import com.example.taskmanager.dto.ProjectCreateDto;
+import com.example.taskmanager.dto.ProjectDto;
 import com.example.taskmanager.security.JwtAuthFilter;
 import com.example.taskmanager.service.ProjectService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +41,7 @@ class ProjectControllerTest {
 
     @Test
     void getAll_returns_list() throws Exception {
-        var p = Project.builder().id(1L).name("Alpha").description("desc").build();
+        var p = new ProjectDto(1L, "Alpha", "desc", null);
         Mockito.when(projectService.findAll()).thenReturn(List.of(p));
 
         mvc.perform(get("/projects"))
@@ -51,10 +52,10 @@ class ProjectControllerTest {
 
     @Test
     void create_returns201_and_body() throws Exception {
-        var req = Project.builder().name("New").description("d").build();
-        var saved = Project.builder().id(5L).name("New").description("d").build();
+        var req = new ProjectCreateDto("New", "d");
+        var saved = new ProjectDto(5L, "New", "d", null);
 
-        Mockito.when(projectService.create(any(Project.class))).thenReturn(saved);
+        Mockito.when(projectService.create(any(ProjectCreateDto.class))).thenReturn(saved);
 
         mvc.perform(post("/projects")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -77,8 +78,8 @@ class ProjectControllerTest {
 
     @Test
     void create_400_when_name_blank() throws Exception {
-        // Needs @Valid on controller method and @NotBlank on Project.name
-        var req = Project.builder().name("").description("d").build();
+        // Needs @Valid on controller method and @NotBlank on ProjectCreateDto.name
+        var req = new ProjectCreateDto("", "d");
 
         mvc.perform(post("/projects")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -90,8 +91,8 @@ class ProjectControllerTest {
 
     @Test
     void create_500_when_service_throws_unexpected() throws Exception {
-        var req = Project.builder().name("Boom").build();
-        Mockito.when(projectService.create(Mockito.any(Project.class)))
+        var req = new ProjectCreateDto("Boom", null);
+        Mockito.when(projectService.create(Mockito.any(ProjectCreateDto.class)))
                 .thenThrow(new RuntimeException("DB down"));
 
         mvc.perform(post("/projects")

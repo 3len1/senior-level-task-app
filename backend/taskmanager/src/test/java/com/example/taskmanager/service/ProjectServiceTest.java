@@ -1,5 +1,8 @@
 package com.example.taskmanager.service;
 
+import com.example.taskmanager.dto.ProjectCreateDto;
+import com.example.taskmanager.dto.ProjectDto;
+import com.example.taskmanager.mapper.ProjectMapper;
 import com.example.taskmanager.model.Project;
 import com.example.taskmanager.repository.ProjectRepository;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,7 @@ import static org.mockito.Mockito.*;
 class ProjectServiceTest {
 
     @Mock ProjectRepository projectRepository;
+    @Mock ProjectMapper projectMapper;
 
     @InjectMocks ProjectService projectService;
 
@@ -25,24 +29,32 @@ class ProjectServiceTest {
     void findAll_returnsAllProjects() {
         var p = Project.builder().id(1L).name("Alpha").build();
         when(projectRepository.findAll()).thenReturn(List.of(p));
+        when(projectMapper.toDto(p)).thenReturn(new ProjectDto(1L, "Alpha", null, null));
 
         var result = projectService.findAll();
 
         assertEquals(1, result.size());
-        assertEquals("Alpha", result.get(0).getName());
+        assertEquals("Alpha", result.get(0).name());
         verify(projectRepository).findAll();
+        verify(projectMapper).toDto(p);
     }
 
     @Test
     void create_savesAndReturns() {
-        var req = Project.builder().name("New").build();
+        var req = new ProjectCreateDto("New", null);
+        var toSave = Project.builder().name("New").build();
         var saved = Project.builder().id(10L).name("New").build();
-        when(projectRepository.save(req)).thenReturn(saved);
+        when(projectMapper.toEntity(req)).thenReturn(toSave);
+        when(projectRepository.save(toSave)).thenReturn(saved);
+        when(projectMapper.toDto(saved)).thenReturn(new ProjectDto(10L, "New", null, null));
 
         var result = projectService.create(req);
 
-        assertEquals(10L, result.getId());
-        verify(projectRepository).save(req);
+        assertEquals(10L, result.id());
+        assertEquals("New", result.name());
+        verify(projectMapper).toEntity(req);
+        verify(projectRepository).save(toSave);
+        verify(projectMapper).toDto(saved);
     }
 
     @Test

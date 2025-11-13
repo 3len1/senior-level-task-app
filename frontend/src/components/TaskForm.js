@@ -37,7 +37,7 @@ export default function TaskForm() {
         title: task.title || '',
         description: task.description || '',
         status: task.status || 'TODO',
-        projectId: task.project?.id || pid || '',
+        projectId: task.projectId || task.project?.id || pid || '',
       });
     }
   }, [task, pid]);

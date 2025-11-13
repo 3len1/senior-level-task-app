@@ -1,9 +1,11 @@
 package com.example.taskmanager.controller;
 
+import com.example.taskmanager.dto.UserDto;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.enums.UserRole;
 import com.example.taskmanager.security.JwtAuthFilter;
 import com.example.taskmanager.service.UserService;
+import com.example.taskmanager.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,6 +30,9 @@ class UserControllerTest {
     @MockBean
     private UserService userService;
 
+    @MockBean
+    private UserMapper userMapper;
+
     // Mock security filter to avoid loading full security context in slice tests
     @MockBean
     private JwtAuthFilter jwtAuthFilter;
@@ -36,6 +41,7 @@ class UserControllerTest {
     void list_users_returns200() throws Exception {
         var u = User.builder().id(1L).username("eleni").role(UserRole.ROLE_USER).build();
         Mockito.when(userService.list()).thenReturn(List.of(u));
+        Mockito.when(userMapper.toDto(u)).thenReturn(new UserDto(1L, "eleni", UserRole.ROLE_USER));
 
         mvc.perform(get("/users"))
                 .andExpect(status().isOk())

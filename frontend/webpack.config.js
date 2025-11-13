@@ -22,20 +22,18 @@ module.exports = {
     static: path.resolve(__dirname, 'public'),
     historyApiFallback: true,
     port: 3000,
-    proxy: [
-      {
-        context: ['/api'],
+    proxy: {
+      '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        pathRewrite: { '^/api': '' }
+        pathRewrite: { '^/api': '' },
       },
-      {
-        context: ['/stomp', '/stomp/**'],
+      '/stomp': {
         target: 'http://localhost:8080',
         ws: true,
-        changeOrigin: true
+        changeOrigin: true,
       }
-    ]
+    }
   },
   module: {
     rules: [

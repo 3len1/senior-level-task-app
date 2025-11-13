@@ -1,7 +1,10 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.model.Project;
-import com.example.taskmanager.model.Task;
+import com.example.taskmanager.dto.ProjectCreateDto;
+import com.example.taskmanager.dto.ProjectDto;
+import com.example.taskmanager.dto.TaskCreateDto;
+import com.example.taskmanager.dto.TaskDto;
+import com.example.taskmanager.dto.TaskUpdateDto;
 import com.example.taskmanager.enums.TaskStatus;
 import com.example.taskmanager.security.SecurityConfig;
 import com.example.taskmanager.service.ProjectService;
@@ -45,6 +48,8 @@ class SecurityRbacTest {
     @MockBean ProjectService projectService;
     @MockBean TaskService taskService;
     @MockBean UserService userService;
+    // Mock MapStruct mapper required by UserController in this slice context
+    @MockBean com.example.taskmanager.mapper.UserMapper userMapper;
 
     // Ensure JWT filter doesn't short-circuit the chain in this RBAC test
     @MockBean com.example.taskmanager.security.JwtAuthFilter jwtAuthFilter;
@@ -62,9 +67,9 @@ class SecurityRbacTest {
 
     @Test
     void post_projects_forbidden_for_USER_allowed_for_ADMIN() throws Exception {
-        var body = Project.builder().name("New").description("d").build();
-        var saved = Project.builder().id(10L).name("New").description("d").build();
-        Mockito.when(projectService.create(any(Project.class))).thenReturn(saved);
+        var body = new ProjectCreateDto("New", "d");
+        var saved = new ProjectDto(10L, "New", "d", null);
+        Mockito.when(projectService.create(any(ProjectCreateDto.class))).thenReturn(saved);
 
         // USER -> 403
         mvc.perform(post("/projects")
@@ -101,9 +106,9 @@ class SecurityRbacTest {
 
     @Test
     void post_project_tasks_forbidden_for_USER_allowed_for_ADMIN_and_MODERATOR() throws Exception {
-        var req = Task.builder().title("T").status(TaskStatus.TODO).build();
-        var saved = Task.builder().id(5L).title("T").status(TaskStatus.TODO).build();
-        Mockito.when(taskService.create(eq(1L), any(Task.class))).thenReturn(saved);
+        var req = new TaskCreateDto("T", null, TaskStatus.TODO, null, null);
+        var saved = new TaskDto(5L, "T", null, TaskStatus.TODO, null, 1L, null, null);
+        Mockito.when(taskService.create(eq(1L), any(TaskCreateDto.class))).thenReturn(saved);
 
         // USER -> 403
         mvc.perform(post("/projects/1/tasks")
@@ -130,9 +135,9 @@ class SecurityRbacTest {
 
     @Test
     void put_and_delete_tasks_forbidden_for_USER_allowed_for_MODERATOR_and_ADMIN() throws Exception {
-        var req = Task.builder().title("Upd").status(TaskStatus.IN_PROGRESS).build();
-        var saved = Task.builder().id(9L).title("Upd").status(TaskStatus.IN_PROGRESS).build();
-        Mockito.when(taskService.update(eq(9L), any(Task.class))).thenReturn(saved);
+        var req = new TaskUpdateDto("Upd", null, TaskStatus.IN_PROGRESS, null, null);
+        var saved = new TaskDto(9L, "Upd", null, TaskStatus.IN_PROGRESS, null, 1L, null, null);
+        Mockito.when(taskService.update(eq(9L), any(TaskUpdateDto.class))).thenReturn(saved);
 
         // PUT as USER -> 403
         mvc.perform(put("/tasks/9")

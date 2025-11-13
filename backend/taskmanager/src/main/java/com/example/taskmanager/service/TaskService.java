@@ -1,5 +1,9 @@
 package com.example.taskmanager.service;
 
+import com.example.taskmanager.dto.TaskCreateDto;
+import com.example.taskmanager.dto.TaskDto;
+import com.example.taskmanager.dto.TaskUpdateDto;
+import com.example.taskmanager.mapper.TaskMapper;
 import com.example.taskmanager.model.Project;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.model.User;
@@ -12,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -20,53 +25,60 @@ public class TaskService {
     private final ProjectService projects;
     private final UserRepository users;
     private final SimpMessagingTemplate broker; // WebSocket broadcasts
+    private final TaskMapper mapper;
 
-    public TaskService(TaskRepository tasks, ProjectService projects, UserRepository users, SimpMessagingTemplate broker) {
+    public TaskService(TaskRepository tasks, ProjectService projects, UserRepository users, SimpMessagingTemplate broker, TaskMapper mapper) {
         this.tasks = tasks;
         this.projects = projects;
         this.users = users;
         this.broker = broker;
+        this.mapper = mapper;
     }
 
     // Return all tasks for a project for any authenticated user (visibility widened per request)
-    public List<Task> findByProject(Long projectId) {
+    public List<TaskDto> findByProject(Long projectId) {
         projects.getOr404(projectId);
-        return tasks.findByProjectId(projectId);
+        return tasks.findByProjectId(projectId).stream().map(mapper::toDto).collect(Collectors.toList());
     }
 
-    public Task create(Long projectId, Task t) {
+    public TaskDto create(Long projectId, TaskCreateDto dto) {
         Project p = projects.getOr404(projectId);
-        t.setProject(p);
-        // Resolve assignee if provided with id
-        if (t.getAssignee() != null && t.getAssignee().getId() != null) {
-            User assignee = users.findById(t.getAssignee().getId())
+        Task t = Task.builder()
+                .title(dto.title())
+                .description(dto.description())
+                .status(dto.status())
+                .deadline(dto.deadline())
+                .project(p)
+                .build();
+        if (dto.assigneeId() != null) {
+            User assignee = users.findById(dto.assigneeId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignee not found"));
             t.setAssignee(assignee);
         }
         Task saved = tasks.save(t);
-        broker.convertAndSend("/topic/projects/" + projectId + "/tasks", saved);
-        return saved;
+        TaskDto out = mapper.toDto(saved);
+        broker.convertAndSend("/topic/projects/" + projectId + "/tasks", out);
+        return out;
     }
 
-    public Task update(Long id, Task incoming) {
+    public TaskDto update(Long id, TaskUpdateDto incoming) {
         Task existing = tasks.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
-        existing.setTitle(incoming.getTitle());
-        existing.setDescription(incoming.getDescription());
-        existing.setStatus(incoming.getStatus());
-        existing.setDeadline(incoming.getDeadline());
-        if (incoming.getAssignee() != null) {
-            if (incoming.getAssignee().getId() != null) {
-                User assignee = users.findById(incoming.getAssignee().getId())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignee not found"));
-                existing.setAssignee(assignee);
-            } else {
-                existing.setAssignee(null);
-            }
+        existing.setTitle(incoming.title());
+        existing.setDescription(incoming.description());
+        existing.setStatus(incoming.status());
+        existing.setDeadline(incoming.deadline());
+        if (incoming.assigneeId() != null) {
+            User assignee = users.findById(incoming.assigneeId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignee not found"));
+            existing.setAssignee(assignee);
+        } else {
+            existing.setAssignee(null);
         }
         Task saved = tasks.save(existing);
-        broker.convertAndSend("/topic/projects/" + saved.getProject().getId() + "/tasks", saved);
-        return saved;
+        TaskDto out = mapper.toDto(saved);
+        broker.convertAndSend("/topic/projects/" + saved.getProject().getId() + "/tasks", out);
+        return out;
     }
 
     public void delete(Long id) {

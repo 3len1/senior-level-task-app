@@ -44,16 +44,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/users/**").hasRole("ADMIN")
                         // Tasks within projects (specific rules BEFORE generic projects rules)
-                        .requestMatchers(HttpMethod.POST, "/projects/*/tasks").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/projects/*/tasks").hasAnyRole("ADMIN", "MODERATOR")
                         .requestMatchers(HttpMethod.GET, "/projects/*/tasks").authenticated()
                         // Projects
                         .requestMatchers(HttpMethod.POST, "/projects").hasAnyRole("ADMIN", "MODERATOR")
                         .requestMatchers(HttpMethod.DELETE, "/projects/**").hasAnyRole("ADMIN", "MODERATOR")
                         .requestMatchers(HttpMethod.GET, "/projects", "/projects/**").authenticated()
-                        // Direct task operations
-                        .requestMatchers(HttpMethod.POST, "/tasks/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/tasks/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/tasks/**").authenticated()
+                        // Direct task operations (restrict create/update/delete to ADMIN or MODERATOR)
+                        .requestMatchers(HttpMethod.POST, "/tasks/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.PUT, "/tasks/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/tasks/**").hasAnyRole("ADMIN", "MODERATOR")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

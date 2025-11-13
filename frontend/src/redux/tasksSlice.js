@@ -40,7 +40,7 @@ const tasksSlice = createSlice({
     updateTaskRequested(state) {},
     updateTaskSucceeded(state, action) {
       const { task } = action.payload;
-      const projectId = task.project?.id || action.payload.projectId;
+      const projectId = task.projectId || task.project?.id || action.payload.projectId;
       const bucket = state.byProject[projectId];
       if (bucket) {
         const idx = bucket.items.findIndex((t) => t.id === task.id);
@@ -78,7 +78,7 @@ const tasksSlice = createSlice({
         }
       } else if (evt.id) {
         const t = evt;
-        const pid = t.project?.id || projectId;
+        const pid = t.projectId || t.project?.id || projectId;
         const b = pid ? (state.byProject[pid] || (state.byProject[pid] = { items: [], loading: false, error: null })) : null;
         if (b) {
           const idx = b.items.findIndex((x) => x.id === t.id);

@@ -1,6 +1,7 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.model.Project;
+import com.example.taskmanager.dto.ProjectCreateDto;
+import com.example.taskmanager.dto.ProjectDto;
 import com.example.taskmanager.service.ProjectService;
 import com.example.taskmanager.web.ApiError;
 import io.swagger.v3.oas.annotations.*;
@@ -29,17 +30,17 @@ public class ProjectController {
 
     @Operation(summary = "List all projects")
     @ApiResponse(responseCode = "200", description = "Projects retrieved",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Project.class))))
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDto.class))))
     @GetMapping
-    public List<Project> getAll() { return projects.findAll(); }
+    public List<ProjectDto> getAll() { return projects.findAll(); }
 
     @Operation(summary = "Create a new project")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Project created",
-                    content = @Content(schema = @Schema(implementation = Project.class))),
+                    content = @Content(schema = @Schema(implementation = ProjectDto.class))),
             @ApiResponse(responseCode = "400", description = "Invalid payload", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Project create(@RequestBody @Valid Project p) { return projects.create(p); }
+    public ProjectDto create(@RequestBody @Valid ProjectCreateDto p) { return projects.create(p); }
 }

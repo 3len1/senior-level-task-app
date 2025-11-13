@@ -4,7 +4,17 @@ import { Client } from '@stomp/stompjs';
 let client = null;
 let subscriptions = {};
 
+const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+const isTest = typeof process !== 'undefined' && process.env && process.env.JEST_WORKER_ID;
+
 export function connectSocket({ onConnect, onDisconnect } = {}) {
+  // In tests or non-browser environments, provide a no-op client to avoid TextEncoder/WebSocket issues
+  if (!isBrowser || isTest) {
+    client = { active: false, connected: false, subscribe: () => ({ unsubscribe() {} }) };
+    onConnect && onConnect();
+    return client;
+  }
+
   if (client && client.active) return client;
 
   client = new Client({
@@ -32,20 +42,30 @@ export function connectSocket({ onConnect, onDisconnect } = {}) {
 
 export function disconnectSocket() {
   if (client) {
-    try { client.deactivate(); } catch (_) {}
+    try { client.deactivate && client.deactivate(); } catch (_) {}
     client = null;
     subscriptions = {};
   }
 }
 
 export function subscribeProjectTasks(projectId, callback) {
-  if (!client || !client.connected) return null;
+  if (!client || !client.connected) return { unsubscribe() {} };
   const destination = `/topic/projects/${projectId}/tasks`;
   if (subscriptions[destination]) return subscriptions[destination];
   const sub = client.subscribe(destination, (msg) => {
     try {
       const body = JSON.parse(msg.body);
-      callback(body);
+      // Normalize task events to DTO-like shape on the client
+      if (body && body.id) {
+        try {
+          const { normalizeTask } = require('./api');
+          callback(normalizeTask(body));
+        } catch (_) {
+          callback(body);
+        }
+      } else {
+        callback(body);
+      }
     } catch (e) {
       console.warn('Invalid WS payload', e);
     }

@@ -1,6 +1,8 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.model.Task;
+import com.example.taskmanager.dto.TaskCreateDto;
+import com.example.taskmanager.dto.TaskDto;
+import com.example.taskmanager.dto.TaskUpdateDto;
 import com.example.taskmanager.enums.TaskStatus;
 import com.example.taskmanager.security.JwtAuthFilter;
 import com.example.taskmanager.service.TaskService;
@@ -39,7 +41,7 @@ class TaskControllerTest {
 
     @Test
     void list_by_project_returns_tasks() throws Exception {
-        var t = Task.builder().id(10L).title("Do it").status(TaskStatus.TODO).build();
+        var t = new TaskDto(10L, "Do it", null, TaskStatus.TODO, null, 1L, null, null);
         Mockito.when(taskService.findByProject(1L)).thenReturn(List.of(t));
 
         mvc.perform(get("/projects/1/tasks"))
@@ -50,10 +52,10 @@ class TaskControllerTest {
 
     @Test
     void create_task_returns201() throws Exception {
-        var req = Task.builder().title("New").description("x").status(TaskStatus.TODO).build();
-        var saved = Task.builder().id(22L).title("New").description("x").status(TaskStatus.TODO).build();
+        var req = new TaskCreateDto("New", "x", TaskStatus.TODO, null, null);
+        var saved = new TaskDto(22L, "New", "x", TaskStatus.TODO, null, 1L, null, null);
 
-        Mockito.when(taskService.create(eq(1L), any(Task.class))).thenReturn(saved);
+        Mockito.when(taskService.create(eq(1L), any(TaskCreateDto.class))).thenReturn(saved);
 
         mvc.perform(post("/projects/1/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -65,10 +67,10 @@ class TaskControllerTest {
 
     @Test
     void update_task_returns200() throws Exception {
-        var req = Task.builder().title("Upd").description("y").status(TaskStatus.IN_PROGRESS).build();
-        var saved = Task.builder().id(33L).title("Upd").description("y").status(TaskStatus.IN_PROGRESS).build();
+        var req = new TaskUpdateDto("Upd", "y", TaskStatus.IN_PROGRESS, null, null);
+        var saved = new TaskDto(33L, "Upd", "y", TaskStatus.IN_PROGRESS, null, 1L, null, null);
 
-        Mockito.when(taskService.update(eq(33L), any(Task.class))).thenReturn(saved);
+        Mockito.when(taskService.update(eq(33L), any(TaskUpdateDto.class))).thenReturn(saved);
 
         mvc.perform(put("/tasks/33")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -96,12 +98,8 @@ class TaskControllerTest {
 
     @Test
     void create_task_400_when_title_blank() throws Exception {
-        // Requires @NotBlank on Task.title and @Valid in controller
-        var req = com.example.taskmanager.model.Task.builder()
-                .title("") // invalid
-                .description("x")
-                .status(com.example.taskmanager.enums.TaskStatus.TODO)
-                .build();
+        // Requires @NotBlank on title and @Valid in controller
+        var req = new TaskCreateDto("", "x", TaskStatus.TODO, null, null);
 
         mvc.perform(post("/projects/1/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -112,12 +110,9 @@ class TaskControllerTest {
 
     @Test
     void update_task_404_when_not_found() throws Exception {
-        var req = com.example.taskmanager.model.Task.builder()
-                .title("Upd").description("y")
-                .status(com.example.taskmanager.enums.TaskStatus.IN_PROGRESS)
-                .build();
+        var req = new TaskUpdateDto("Upd", "y", TaskStatus.IN_PROGRESS, null, null);
 
-        Mockito.when(taskService.update(eq(123L), Mockito.any(com.example.taskmanager.model.Task.class)))
+        Mockito.when(taskService.update(eq(123L), Mockito.any(TaskUpdateDto.class)))
                 .thenThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Task not found"));
 
         mvc.perform(put("/tasks/123")
