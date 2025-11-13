@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: taskmanager
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taskdb   # 'localhost' because app runs on your machine
+    username: taskuser
+    password: taskpass
+  jpa:
+    hibernate:
+      ddl-auto: validate         # let Flyway manage schema; validate at startup
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    # default location is classpath:db/migration; keep if that's where your V1__init.sql lives
+    locations: classpath:db/migration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  docker:
+    compose:
+      file:  backend/taskmanager/compose.yaml
+      project-name: taskmanager
+      lifecycle-management: start_only
+
+logging:
+  level:
+    org.hibernate.SQL: info
+
+# Swagger / OpenAPI (springdoc) – optional polish
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# App-specific settings (for JWT etc.)
+app:
+  jwt:
+    secret: 1111111111111111111111111111111111
+    expiration-ms: 86400000  # 1 day
+
