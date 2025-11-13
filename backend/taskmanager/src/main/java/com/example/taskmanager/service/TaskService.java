@@ -7,16 +7,11 @@ import com.example.taskmanager.repository.TaskRepository;
 import com.example.taskmanager.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 public class TaskService {
@@ -33,12 +28,9 @@ public class TaskService {
         this.broker = broker;
     }
 
+    // Return all tasks for a project for any authenticated user (visibility widened per request)
     public List<Task> findByProject(Long projectId) {
         projects.getOr404(projectId);
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && isOnlyUser(auth.getAuthorities())) {
-            return tasks.findByProjectIdAndAssignee_Username(projectId, auth.getName());
-        }
         return tasks.findByProjectId(projectId);
     }
 
@@ -83,16 +75,5 @@ public class TaskService {
         Long projectId = existing.getProject().getId();
         tasks.delete(existing);
         broker.convertAndSend("/topic/projects/" + projectId + "/tasks", Map.of("deletedId", id));
-    }
-
-    private boolean isOnlyUser(Collection<? extends GrantedAuthority> authorities) {
-        boolean hasUser = false;
-        boolean hasAdminOrMod = false;
-        for (GrantedAuthority ga : authorities) {
-            String a = ga.getAuthority();
-            if (Objects.equals(a, "ROLE_USER")) hasUser = true;
-            if (Objects.equals(a, "ROLE_ADMIN") || Objects.equals(a, "ROLE_MODERATOR")) hasAdminOrMod = true;
-        }
-        return hasUser && !hasAdminOrMod;
     }
 }
