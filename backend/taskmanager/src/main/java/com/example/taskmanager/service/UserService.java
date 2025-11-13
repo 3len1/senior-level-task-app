@@ -36,6 +36,24 @@ public class UserService implements UserDetailsService {
         return users.save(u);
     }
 
+    public User create(String username, String rawPassword, UserRole role) {
+        return register(username, rawPassword, role);
+    }
+
+    public void delete(Long id) {
+        if (!users.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        users.deleteById(id);
+    }
+
+    public User changePassword(Long id, String newPassword) {
+        User u = users.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        u.setPassword(encoder.encode(newPassword));
+        return users.save(u);
+    }
+
     public boolean passwordMatches(String raw, String encoded) {
         return encoder.matches(raw, encoded);
     }

@@ -37,19 +37,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/register",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                                "/actuator/**", "/ws/**").permitAll()
-                        // Users listing for ADMIN or MODERATOR
+                                "/actuator/**", "/ws/**", "/stomp/**").permitAll()
+                        // Users
                         .requestMatchers(HttpMethod.GET, "/users", "/users/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.POST, "/users", "/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/users/**").hasRole("ADMIN")
                         // Tasks within projects (specific rules BEFORE generic projects rules)
-                        .requestMatchers(HttpMethod.POST, "/projects/*/tasks").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.POST, "/projects/*/tasks").authenticated()
                         .requestMatchers(HttpMethod.GET, "/projects/*/tasks").authenticated()
                         // Projects
-                        .requestMatchers(HttpMethod.POST, "/projects").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/projects/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/projects").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/projects/**").hasAnyRole("ADMIN", "MODERATOR")
                         .requestMatchers(HttpMethod.GET, "/projects", "/projects/**").authenticated()
                         // Direct task operations
-                        .requestMatchers(HttpMethod.PUT, "/tasks/**").hasAnyRole("ADMIN", "MODERATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/tasks/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.POST, "/tasks/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/tasks/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/tasks/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

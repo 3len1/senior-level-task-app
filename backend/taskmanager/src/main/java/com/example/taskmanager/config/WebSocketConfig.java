@@ -17,7 +17,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+        // Use non-default path to avoid conflict with webpack-dev-server which also uses "/ws" for HMR
+        registry.addEndpoint("/stomp").setAllowedOriginPatterns("*");
+        registry.addEndpoint("/stomp").setAllowedOriginPatterns("*").withSockJS();
     }
 }

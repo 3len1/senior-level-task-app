@@ -3,13 +3,9 @@ package com.example.taskmanager.service;
 import com.example.taskmanager.model.Project;
 import com.example.taskmanager.repository.ProjectRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -21,14 +17,8 @@ public class ProjectService {
         this.projects = projects;
     }
 
+    // Return all projects for any authenticated user (visibility widened per request)
     public List<Project> findAll() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) {
-            return projects.findAll();
-        }
-        if (hasRole(auth.getAuthorities(), "ROLE_USER") && !hasRole(auth.getAuthorities(), "ROLE_ADMIN") && !hasRole(auth.getAuthorities(), "ROLE_MODERATOR")) {
-            return projects.findDistinctByTasks_Assignee_Username(auth.getName());
-        }
         return projects.findAll();
     }
 
@@ -41,10 +31,9 @@ public class ProjectService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
     }
 
-    private boolean hasRole(Collection<? extends GrantedAuthority> authorities, String role) {
-        for (GrantedAuthority ga : authorities) {
-            if (role.equals(ga.getAuthority())) return true;
-        }
-        return false;
+    public void delete(Long id) {
+        Project p = projects.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+        projects.delete(p); // cascade removes tasks due to orphanRemoval = true
     }
 }

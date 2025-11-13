@@ -1,6 +1,8 @@
 package com.example.taskmanager.model;
 
 import com.example.taskmanager.enums.TaskStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -10,6 +12,11 @@ import java.time.Instant;
 @Entity
 @Table(name = "tasks")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@com.fasterxml.jackson.annotation.JsonIdentityInfo(
+        generator = com.fasterxml.jackson.annotation.ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Task {
 
     @Id
@@ -39,6 +46,7 @@ public class Task {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "project_id", nullable = false)
     @ToString.Exclude
+    @JsonBackReference
     private Project project;
 
     // FK: tasks.assignee_id -> users.id

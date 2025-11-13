@@ -1,5 +1,6 @@
 package com.example.taskmanager.controller;
 
+import com.example.taskmanager.enums.UserRole;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.service.UserService;
 import com.example.taskmanager.web.ApiError;
@@ -8,6 +9,9 @@ import io.swagger.v3.oas.annotations.media.*;
 import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,14 +26,57 @@ import java.util.List;
 })
 public class UserController {
 
+    public record CreateUserRequest(
+            @NotBlank String username,
+            @NotBlank String password,
+            UserRole role
+    ) {}
+
+    public record ChangePasswordRequest(
+            @NotBlank String password
+    ) {}
+
     private final UserService users;
     public UserController(UserService users) { this.users = users; }
 
-    @Operation(summary = "List users (admin)")
+    @Operation(summary = "List users (admin/moderator)")
     @ApiResponse(responseCode = "200", description = "Users retrieved",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = User.class))))
     @GetMapping
-    public List<User> list() {
-        return users.list();
+    public List<User> list() { return users.list(); }
+
+    @Operation(summary = "Create user (admin)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "User created",
+                    content = @Content(schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "409", description = "Username exists",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public User create(@RequestBody @Valid CreateUserRequest req) {
+        return users.create(req.username(), req.password(), req.role());
+    }
+
+    @Operation(summary = "Delete user (admin)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User deleted"),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) { users.delete(id); }
+
+    @Operation(summary = "Change user password (admin)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password changed",
+                    content = @Content(schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @PutMapping("/{id}/password")
+    public User changePassword(@PathVariable Long id, @RequestBody @Valid ChangePasswordRequest req) {
+        return users.changePassword(id, req.password());
     }
 }
