@@ -19,5 +19,4 @@ services:
 
 volumes:
   pgdata:
-    external: true
     name: taskmanager_pgdata
