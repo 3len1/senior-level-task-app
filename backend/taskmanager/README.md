@@ -9,6 +9,10 @@ This README covers how to run the Spring Boot backend, how to use Docker Compose
   mvnw.cmd spring-boot:run
   ```
 - Swagger UI: http://localhost:8080/swagger-ui/index.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+- Actuator Health: http://localhost:8080/actuator/health
+- Actuator Info: http://localhost:8080/actuator/info
+- Actuator Metrics (list): http://localhost:8080/actuator/metrics
 
 If your app needs Postgres/other services, either run them manually (Docker or native) or use the module compose below (`backend/taskmanager/compose.yaml`).
 

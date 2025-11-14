@@ -32,6 +32,15 @@ logging:
   level:
     org.hibernate.SQL: info
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
 # Swagger / OpenAPI (springdoc) – optional polish
 springdoc:
   api-docs:
