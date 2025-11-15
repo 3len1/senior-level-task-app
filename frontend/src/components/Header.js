@@ -44,18 +44,6 @@ export default function Header() {
                 >
                   Tasks
                 </Button>
-                <Button
-                  color="inherit"
-                  component={RouterLink}
-                  to="/notifications"
-                  sx={{
-                    color: 'inherit',
-                    borderBottom: location.pathname.startsWith('/notifications') ? '2px solid rgba(255,255,255,0.9)' : 'none',
-                    borderRadius: 0
-                  }}
-                >
-                  Notifications
-                </Button>
                 {isAdminOrMod && (
                   <Button
                     color="inherit"

@@ -9,6 +9,5 @@ public record TaskCreateDto(
         @NotBlank String title,
         String description,
         @NotNull TaskStatus status,
-        Instant deadline,
-        Long assigneeId
+        Instant deadline
 ) {}

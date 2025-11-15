@@ -37,10 +37,7 @@ export const ProjectApi = {
 
 export function normalizeTask(raw) {
   if (!raw || typeof raw !== 'object') return raw;
-  // If already DTO-like
   const projectId = raw.projectId ?? raw.project?.id ?? null;
-  const assigneeId = raw.assigneeId ?? raw.assignee?.id ?? null;
-  const assigneeUsername = raw.assigneeUsername ?? raw.assignee?.username ?? null;
   return {
     id: raw.id,
     title: raw.title,
@@ -48,9 +45,6 @@ export function normalizeTask(raw) {
     status: raw.status,
     deadline: raw.deadline ?? null,
     projectId,
-    assigneeId,
-    assigneeUsername,
-    // keep other flags if present (e.g., expired)
     expired: raw.expired ?? false,
   };
 }
@@ -59,6 +53,10 @@ export const TaskApi = {
   async list(projectId) {
     const { data } = await api.get(`/projects/${projectId}/tasks`);
     return Array.isArray(data) ? data.map(normalizeTask) : [];
+  },
+  async get(taskId) {
+    const { data } = await api.get(`/tasks/${taskId}`);
+    return normalizeTask(data);
   },
   async create(projectId, task) {
     // Backend DTO expects flat fields; pass through

@@ -6,9 +6,7 @@ import com.example.taskmanager.dto.TaskUpdateDto;
 import com.example.taskmanager.mapper.TaskMapper;
 import com.example.taskmanager.model.Project;
 import com.example.taskmanager.model.Task;
-import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.TaskRepository;
-import com.example.taskmanager.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -23,14 +21,12 @@ public class TaskService {
 
     private final TaskRepository tasks;
     private final ProjectService projects;
-    private final UserRepository users;
     private final SimpMessagingTemplate broker; // WebSocket broadcasts
     private final TaskMapper mapper;
 
-    public TaskService(TaskRepository tasks, ProjectService projects, UserRepository users, SimpMessagingTemplate broker, TaskMapper mapper) {
+    public TaskService(TaskRepository tasks, ProjectService projects, SimpMessagingTemplate broker, TaskMapper mapper) {
         this.tasks = tasks;
         this.projects = projects;
-        this.users = users;
         this.broker = broker;
         this.mapper = mapper;
     }
@@ -50,14 +46,12 @@ public class TaskService {
                 .deadline(dto.deadline())
                 .project(p)
                 .build();
-        if (dto.assigneeId() != null) {
-            User assignee = users.findById(dto.assigneeId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignee not found"));
-            t.setAssignee(assignee);
-        }
         Task saved = tasks.save(t);
         TaskDto out = mapper.toDto(saved);
+        // Broadcast to project-specific topic
         broker.convertAndSend("/topic/projects/" + projectId + "/tasks", out);
+        // Also broadcast globally so everyone can receive notifications on task creation
+        broker.convertAndSend("/topic/tasks", out);
         return out;
     }
 
@@ -68,13 +62,6 @@ public class TaskService {
         existing.setDescription(incoming.description());
         existing.setStatus(incoming.status());
         existing.setDeadline(incoming.deadline());
-        if (incoming.assigneeId() != null) {
-            User assignee = users.findById(incoming.assigneeId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignee not found"));
-            existing.setAssignee(assignee);
-        } else {
-            existing.setAssignee(null);
-        }
         Task saved = tasks.save(existing);
         TaskDto out = mapper.toDto(saved);
         broker.convertAndSend("/topic/projects/" + saved.getProject().getId() + "/tasks", out);
@@ -87,5 +74,11 @@ public class TaskService {
         Long projectId = existing.getProject().getId();
         tasks.delete(existing);
         broker.convertAndSend("/topic/projects/" + projectId + "/tasks", Map.of("deletedId", id));
+    }
+
+    public TaskDto get(Long id) {
+        Task t = tasks.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+        return mapper.toDto(t);
     }
 }

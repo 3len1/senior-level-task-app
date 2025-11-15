@@ -10,7 +10,5 @@ import org.mapstruct.MappingConstants;
 public interface TaskMapper {
 
     @Mapping(target = "projectId", source = "project.id")
-    @Mapping(target = "assigneeId", source = "assignee.id")
-    @Mapping(target = "assigneeUsername", source = "assignee.username")
     TaskDto toDto(Task entity);
 }

@@ -74,6 +74,32 @@ export function subscribeProjectTasks(projectId, callback) {
   return sub;
 }
 
+export function subscribeAllTasks(callback) {
+  if (!client || !client.connected) return { unsubscribe() {} };
+  const destination = `/topic/tasks`;
+  if (subscriptions[destination]) return subscriptions[destination];
+  const sub = client.subscribe(destination, (msg) => {
+    try {
+      const body = JSON.parse(msg.body);
+      // Normalize if payload is a task DTO
+      if (body && body.id) {
+        try {
+          const { normalizeTask } = require('./api');
+          callback(normalizeTask(body));
+        } catch (_) {
+          callback(body);
+        }
+      } else {
+        callback(body);
+      }
+    } catch (e) {
+      console.warn('Invalid WS payload', e);
+    }
+  });
+  subscriptions[destination] = sub;
+  return sub;
+}
+
 export function unsubscribe(destination) {
   if (subscriptions[destination]) {
     subscriptions[destination].unsubscribe();

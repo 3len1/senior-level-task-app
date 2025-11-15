@@ -48,10 +48,4 @@ public class Task {
     @ToString.Exclude
     @JsonBackReference
     private Project project;
-
-    // FK: tasks.assignee_id -> users.id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assignee_id")
-    @ToString.Exclude
-    private User assignee;
 }

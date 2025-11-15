@@ -106,8 +106,8 @@ class SecurityRbacTest {
 
     @Test
     void post_project_tasks_forbidden_for_USER_allowed_for_ADMIN_and_MODERATOR() throws Exception {
-        var req = new TaskCreateDto("T", null, TaskStatus.TODO, null, null);
-        var saved = new TaskDto(5L, "T", null, TaskStatus.TODO, null, 1L, null, null);
+        var req = new TaskCreateDto("T", null, TaskStatus.TODO, null);
+        var saved = new TaskDto(5L, "T", null, TaskStatus.TODO, null, 1L);
         Mockito.when(taskService.create(eq(1L), any(TaskCreateDto.class))).thenReturn(saved);
 
         // USER -> 403
@@ -135,8 +135,8 @@ class SecurityRbacTest {
 
     @Test
     void put_and_delete_tasks_forbidden_for_USER_allowed_for_MODERATOR_and_ADMIN() throws Exception {
-        var req = new TaskUpdateDto("Upd", null, TaskStatus.IN_PROGRESS, null, null);
-        var saved = new TaskDto(9L, "Upd", null, TaskStatus.IN_PROGRESS, null, 1L, null, null);
+        var req = new TaskUpdateDto("Upd", null, TaskStatus.IN_PROGRESS, null);
+        var saved = new TaskDto(9L, "Upd", null, TaskStatus.IN_PROGRESS, null, 1L);
         Mockito.when(taskService.update(eq(9L), any(TaskUpdateDto.class))).thenReturn(saved);
 
         // PUT as USER -> 403

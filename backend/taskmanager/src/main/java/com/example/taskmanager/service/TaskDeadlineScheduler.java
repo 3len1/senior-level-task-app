@@ -31,10 +31,13 @@ public class TaskDeadlineScheduler {
             tasks.save(t);
             Map<String, Object> payload = new HashMap<>();
             payload.put("action", "expired");
-            payload.put("taskId", t.getId());
+            payload.put("task", t.getTitle());
             payload.put("projectId", t.getProject().getId());
             payload.put("deadline", t.getDeadline());
+            // Broadcast to project-specific topic
             broker.convertAndSend("/topic/projects/" + t.getProject().getId() + "/tasks", payload);
+            // Also broadcast to global topic so everyone gets expiration notifications
+            broker.convertAndSend("/topic/tasks", payload);
         }
     }
 }

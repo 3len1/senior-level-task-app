@@ -64,7 +64,6 @@ export default function TaskList() {
             <TableRow>
               <TableCell>Title</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Assignee</TableCell>
               <TableCell>Deadline</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -79,7 +78,6 @@ export default function TaskList() {
                   </Stack>
                 </TableCell>
                 <TableCell>{t.status}</TableCell>
-                <TableCell>{t.assigneeUsername || t.assignee?.username || '-'}</TableCell>
                 <TableCell>{t.deadline ? new Date(t.deadline).toLocaleString() : '-'}</TableCell>
                 <TableCell align="right">
                   <Tooltip title="Edit" disablePortal>

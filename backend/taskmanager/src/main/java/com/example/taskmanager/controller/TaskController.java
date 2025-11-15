@@ -69,4 +69,15 @@ public class TaskController {
     public void delete(@PathVariable Long id) {
         tasks.delete(id);
     }
+
+    @Operation(summary = "Get a task by ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Task found",
+                content = @Content(schema = @Schema(implementation = TaskDto.class))),
+        @ApiResponse(responseCode = "404", description = "Task not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @GetMapping("/tasks/{id}")
+    public TaskDto getOne(@PathVariable Long id) {
+        return tasks.get(id);
+    }
 }

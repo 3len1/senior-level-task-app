@@ -41,7 +41,7 @@ class TaskControllerTest {
 
     @Test
     void list_by_project_returns_tasks() throws Exception {
-        var t = new TaskDto(10L, "Do it", null, TaskStatus.TODO, null, 1L, null, null);
+        var t = new TaskDto(10L, "Do it", null, TaskStatus.TODO, null, 1L);
         Mockito.when(taskService.findByProject(1L)).thenReturn(List.of(t));
 
         mvc.perform(get("/projects/1/tasks"))
@@ -52,8 +52,8 @@ class TaskControllerTest {
 
     @Test
     void create_task_returns201() throws Exception {
-        var req = new TaskCreateDto("New", "x", TaskStatus.TODO, null, null);
-        var saved = new TaskDto(22L, "New", "x", TaskStatus.TODO, null, 1L, null, null);
+        var req = new TaskCreateDto("New", "x", TaskStatus.TODO, null);
+        var saved = new TaskDto(22L, "New", "x", TaskStatus.TODO, null, 1L);
 
         Mockito.when(taskService.create(eq(1L), any(TaskCreateDto.class))).thenReturn(saved);
 
@@ -67,8 +67,8 @@ class TaskControllerTest {
 
     @Test
     void update_task_returns200() throws Exception {
-        var req = new TaskUpdateDto("Upd", "y", TaskStatus.IN_PROGRESS, null, null);
-        var saved = new TaskDto(33L, "Upd", "y", TaskStatus.IN_PROGRESS, null, 1L, null, null);
+        var req = new TaskUpdateDto("Upd", "y", TaskStatus.IN_PROGRESS, null);
+        var saved = new TaskDto(33L, "Upd", "y", TaskStatus.IN_PROGRESS, null, 1L);
 
         Mockito.when(taskService.update(eq(33L), any(TaskUpdateDto.class))).thenReturn(saved);
 
@@ -99,7 +99,7 @@ class TaskControllerTest {
     @Test
     void create_task_400_when_title_blank() throws Exception {
         // Requires @NotBlank on title and @Valid in controller
-        var req = new TaskCreateDto("", "x", TaskStatus.TODO, null, null);
+        var req = new TaskCreateDto("", "x", TaskStatus.TODO, null);
 
         mvc.perform(post("/projects/1/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -110,7 +110,7 @@ class TaskControllerTest {
 
     @Test
     void update_task_404_when_not_found() throws Exception {
-        var req = new TaskUpdateDto("Upd", "y", TaskStatus.IN_PROGRESS, null, null);
+        var req = new TaskUpdateDto("Upd", "y", TaskStatus.IN_PROGRESS, null);
 
         Mockito.when(taskService.update(eq(123L), Mockito.any(TaskUpdateDto.class)))
                 .thenThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Task not found"));

@@ -6,7 +6,6 @@ import ProjectDashboard from './components/ProjectDashboard';
 import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import TasksPage from './components/TasksPage';
-import NotificationsPage from './components/NotificationsPage';
 import UserManagement from './components/UserManagement';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -70,14 +69,6 @@ export default function App() {
           element={
             <PrivateRoute>
               <TasksPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <PrivateRoute>
-              <NotificationsPage />
             </PrivateRoute>
           }
         />

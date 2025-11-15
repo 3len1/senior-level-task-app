@@ -9,7 +9,5 @@ public record TaskDto(
         String description,
         TaskStatus status,
         Instant deadline,
-        Long projectId,
-        Long assigneeId,
-        String assigneeUsername
+        Long projectId
 ) {}

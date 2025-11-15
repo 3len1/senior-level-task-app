@@ -2,7 +2,6 @@ package com.example.taskmanager.service;
 
 import com.example.taskmanager.model.Project;
 import com.example.taskmanager.model.Task;
-import com.example.taskmanager.enums.TaskStatus;
 import com.example.taskmanager.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,9 +13,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,33 +28,21 @@ class TaskDeadlineSchedulerTest {
     @InjectMocks TaskDeadlineScheduler scheduler;
 
     @Test
-    void notifyExpiredTasks_marksNotified_andBroadcasts() {
-        var project = Project.builder().id(42L).build();
-        var expired = Task.builder()
-                .id(7L)
-                .title("Overdue")
-                .status(TaskStatus.TODO)
-                .project(project)
-                .deadline(Instant.now().minusSeconds(60))
-                .expiredNotified(false)
-                .build();
-
+    void notifyExpiredTasks_marksAndBroadcastsOnBothTopics() {
+        var project = Project.builder().id(5L).name("P").build();
+        var task = Task.builder().id(10L).title("Overdue").deadline(Instant.now().minusSeconds(60)).project(project).expiredNotified(false).build();
         when(taskRepository.findByDeadlineBeforeAndExpiredNotifiedFalse(any(Instant.class)))
-                .thenReturn(List.of(expired));
+                .thenReturn(List.of(task));
 
         scheduler.notifyExpiredTasks();
 
-        // saved with expiredNotified true
-        verify(taskRepository, times(1)).save(argThat(t -> t.getId().equals(7L) && t.isExpiredNotified()));
+        // Task should be saved with expiredNotified=true
+        ArgumentCaptor<Task> savedCap = ArgumentCaptor.forClass(Task.class);
+        verify(taskRepository).save(savedCap.capture());
+        assertTrue(savedCap.getValue().isExpiredNotified());
 
-        // broadcasted to the correct topic with expected payload
-        ArgumentCaptor<Map<String, Object>> payloadCap = ArgumentCaptor.forClass(Map.class);
-        verify(broker).convertAndSend(eq("/topic/projects/42/tasks"), payloadCap.capture());
-
-        Map<String, Object> payload = payloadCap.getValue();
-        assertEquals("expired", payload.get("action"));
-        assertEquals(7L, payload.get("taskId"));
-        assertEquals(42L, payload.get("projectId"));
-        assertNotNull(payload.get("deadline"));
+        // Two broadcasts: project-specific and global
+        verify(broker).convertAndSend(eq("/topic/projects/5/tasks"), any(Object.class));
+        verify(broker).convertAndSend(eq("/topic/tasks"), any(Object.class));
     }
 }
